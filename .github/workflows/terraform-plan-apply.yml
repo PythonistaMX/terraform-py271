@@ -1,0 +1,84 @@
+name: Terraform plan/apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: Entorno destino
+        required: true
+        default: test
+        type: choice
+        options:
+          - test
+          - prod
+      run_apply:
+        description: Ejecutar apply despues de plan
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.target_environment }}
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+
+      # Variables Terraform desde GitHub Environment variables/secrets
+      TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
+      TF_VAR_region: ${{ vars.GCP_REGION }}
+      TF_VAR_environment: ${{ inputs.target_environment }}
+      TF_VAR_app_name: ${{ vars.APP_NAME }}
+      TF_VAR_artifact_repository_id: ${{ vars.ARTIFACT_REPOSITORY_ID }}
+      TF_VAR_cloud_sql_instance_name: ${{ vars.CLOUD_SQL_INSTANCE_NAME }}
+      TF_VAR_cloud_sql_database_name: ${{ vars.CLOUD_SQL_DATABASE_NAME }}
+      TF_VAR_cloud_sql_tier: ${{ vars.CLOUD_SQL_TIER }}
+      TF_VAR_db_username: ${{ vars.DB_USERNAME }}
+      TF_VAR_enable_deletion_protection: ${{ vars.ENABLE_DELETION_PROTECTION }}
+      TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Authenticate to Google Cloud (OIDC)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        working-directory: .
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="prefix=${{ inputs.target_environment }}/terraform"
+
+      - name: Terraform fmt check
+        working-directory: .
+        run: terraform fmt -check -recursive
+
+      - name: Terraform validate
+        working-directory: .
+        run: terraform validate
+
+      - name: Terraform plan
+        working-directory: .
+        run: terraform plan -out=tfplan
+
+      - name: Terraform apply
+        if: ${{ inputs.run_apply == 'true' }}
+        working-directory: .
+        run: terraform apply -auto-approve tfplan
