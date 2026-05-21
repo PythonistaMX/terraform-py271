@@ -28,6 +28,13 @@ resource "google_sql_database_instance" "app" {
     backup_configuration {
       enabled = true
     }
+
+    ip_configuration {
+      ipv4_enabled        = true
+      authorized_networks = []
+      # Para producción: ipv4_enabled = false + private_network (self_link de la VPC).
+      # Toda conexión debe pasar por Cloud SQL Auth Proxy; nunca TCP directo.
+    }
   }
 }
 
