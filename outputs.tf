@@ -12,3 +12,13 @@ output "cloud_sql_database_name" {
   description = "Cloud SQL database name"
   value       = google_sql_database.app.name
 }
+
+output "workload_identity_provider" {
+  description = "Nombre del WIF provider — valor de GCP_WORKLOAD_IDENTITY_PROVIDER en GitHub Actions"
+  value       = google_iam_workload_identity_pool_provider.github.name
+}
+
+output "cicd_service_account_email" {
+  description = "Email del SA de CI/CD — valor de GCP_SERVICE_ACCOUNT en GitHub Actions"
+  value       = google_service_account.cicd_deployer.email
+}

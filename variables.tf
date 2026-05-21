@@ -55,3 +55,8 @@ variable "enable_deletion_protection" {
   type        = bool
   default     = true
 }
+
+variable "github_repository" {
+  description = "Repositorio de GitHub autorizado para OIDC (formato: org/repo)"
+  type        = string
+}
