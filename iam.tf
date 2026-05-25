@@ -10,6 +10,9 @@ locals {
     "roles/artifactregistry.writer",
     "roles/run.admin",
     "roles/iam.serviceAccountUser",
+    # Necesario para referenciar secretos en `gcloud run deploy --update-secrets`.
+    # Sin este rol el deploy falla al intentar montar APP_SECRET_KEY y APP_SECURITY_PASSWORD_SALT.
+    "roles/secretmanager.viewer",
   ]
 }
 
