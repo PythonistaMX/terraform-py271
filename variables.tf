@@ -60,3 +60,8 @@ variable "github_repository" {
   description = "Repositorio de GitHub autorizado para OIDC (formato: org/repo)"
   type        = string
 }
+
+variable "cloud_run_service_name" {
+  description = "Nombre del servicio Cloud Run — valor de GCP_CLOUD_RUN_SERVICE en GitHub Actions"
+  type        = string
+}

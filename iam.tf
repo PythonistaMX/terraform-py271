@@ -51,3 +51,35 @@ resource "google_service_account_iam_member" "wif_binding" {
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.environment/${var.environment}"
 }
+
+# SA de runtime de Cloud Run: identidad con la que corre el contenedor en producción.
+# Separado del SA de CI/CD para aplicar mínimo privilegio: el runtime no puede
+# desplegar ni modificar infraestructura; solo leer de Cloud SQL.
+resource "google_service_account" "cloud_run_runtime" {
+  account_id   = "${var.app_name}-runtime"
+  display_name = "Cloud Run runtime — ${var.environment}"
+  description  = "Identidad de ejecución del servicio Cloud Run. Gestionado por Terraform."
+}
+
+# Permite al SA de runtime conectarse a Cloud SQL vía Auth Proxy (socket Unix).
+resource "google_project_iam_member" "cloud_run_sql_client" {
+  project = var.project_id
+  role    = "roles/cloudsql.client"
+  member  = "serviceAccount:${google_service_account.cloud_run_runtime.email}"
+}
+
+# El SA de CI/CD necesita actuar como el SA de runtime para poder desplegarlo.
+# Sin este binding, gcloud run deploy falla con "Permission denied on service account".
+resource "google_service_account_iam_member" "cicd_act_as_runtime" {
+  service_account_id = google_service_account.cloud_run_runtime.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.cicd_deployer.email}"
+}
+
+# El SA de runtime necesita leer DATABASE_URL de Secret Manager en tiempo de ejecución.
+# El permiso se otorga solo sobre este secreto (no a nivel de proyecto) para mínimo privilegio.
+resource "google_secret_manager_secret_iam_member" "runtime_database_url" {
+  secret_id = google_secret_manager_secret.database_url.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run_runtime.email}"
+}

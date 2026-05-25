@@ -12,6 +12,17 @@ resource "google_artifact_registry_repository" "app" {
   description   = "Container images for ${var.app_name} (${var.environment})"
   format        = "DOCKER"
 
+  # Nota sobre el registro de imágenes:
+  # Los workflows de demo del curso (envia-a-docker.yaml, envia-a-packages.yml)
+  # publican en Docker Hub y GHCR para ilustrar esos registros. El workflow de
+  # despliegue (despliega-cloud-run.yaml) consume la imagen desde GHCR.
+  # Este repositorio de Artifact Registry es la alternativa recomendada para
+  # equipos con stack 100% GCP: ofrece IAM nativo, escaneo de vulnerabilidades
+  # integrado y latencia menor desde Cloud Run al estar en la misma región.
+  # Para migrar: actualizar IMAGE_URL en despliega-cloud-run.yaml a
+  # "${var.region}-docker.pkg.dev/${var.project_id}/${var.artifact_repository_id}/<image>"
+  # y añadir un paso de login a Artifact Registry en envia-a-packages.yml.
+
   labels = local.labels
 }
 
@@ -47,4 +58,78 @@ resource "google_sql_user" "app" {
   instance = google_sql_database_instance.app.name
   name     = var.db_username
   password = var.db_password
+}
+
+resource "google_secret_manager_secret" "database_url" {
+  secret_id = "DATABASE_URL"
+
+  replication {
+    # auto replica la clave en todas las regiones disponibles de forma gestionada.
+    # Para mayor control geográfico se puede usar user_managed con réplicas explícitas.
+    auto {}
+  }
+
+  labels = local.labels
+}
+
+# NOTA: Terraform crea el contenedor del secreto pero NO su valor (versión).
+# Tras el primer apply, añadir la versión manualmente:
+#   gcloud secrets versions add DATABASE_URL --data-file=<(echo -n "postgresql://<user>:<pass>@/<db>?host=/cloudsql/<connection_name>")
+# Esto evita que la contraseña de base de datos aparezca en el estado de Terraform
+# o en la consola de Cloud Run; solo el SA de runtime puede leerla en tiempo de ejecución.
+
+resource "google_cloud_run_v2_service" "app" {
+  name     = var.cloud_run_service_name
+  location = var.region
+
+  # Cloud Run no tiene deletion_protection nativo; la protección se gestiona
+  # con IAM (revocar roles/run.admin al SA de CI/CD en prod si fuera necesario).
+
+  template {
+    # SA dedicado de runtime: principio de mínimo privilegio.
+    # Solo tiene roles/cloudsql.client y roles/secretmanager.secretAccessor;
+    # no puede modificar infraestructura.
+    service_account = google_service_account.cloud_run_runtime.email
+
+    containers {
+      # Imagen placeholder para el primer apply.
+      # lifecycle.ignore_changes evita que Terraform revierta la imagen
+      # en applies posteriores; el pipeline de CI/CD gestiona las actualizaciones.
+      image = "us-docker.pkg.dev/cloudrun/container/hello"
+
+      env {
+        name  = "APP_ENV"
+        value = var.environment
+      }
+
+      env {
+        name = "DATABASE_URL"
+        # secret_key_ref inyecta el valor en tiempo de ejecución desde Secret Manager.
+        # La contraseña nunca aparece en el estado de Terraform ni en la consola de Cloud Run.
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.database_url.secret_id
+            version = "latest"
+          }
+        }
+      }
+    }
+
+    volumes {
+      name = "cloudsql"
+      cloud_sql_instance {
+        # Monta el socket de Cloud SQL Auth Proxy en /cloudsql/<connection_name>.
+        # La app se conecta vía socket Unix; nunca expone el puerto TCP de Cloud SQL.
+        instances = [google_sql_database_instance.app.connection_name]
+      }
+    }
+  }
+
+  lifecycle {
+    # La imagen la controla el pipeline de CI/CD (gcloud run deploy).
+    # Terraform gestiona configuración, SA, Cloud SQL y variables de entorno.
+    ignore_changes = [template[0].containers[0].image]
+  }
+
+  labels = local.labels
 }
