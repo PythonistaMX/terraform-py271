@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      # Agrupa las acciones de GCP para revisión conjunta.
+      gcp-actions:
+        patterns:
+          - "google-github-actions/*"
+      # Agrupa las acciones de seguridad (Trivy) para revisión conjunta.
+      security-actions:
+        patterns:
+          - "aquasecurity/*"
+
+  - package-ecosystem: "terraform"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3

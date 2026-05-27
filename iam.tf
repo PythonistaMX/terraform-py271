@@ -7,7 +7,6 @@ resource "google_service_account" "cicd_deployer" {
 
 locals {
   cicd_roles = [
-    "roles/artifactregistry.writer",
     "roles/run.admin",
     "roles/iam.serviceAccountUser",
     # Necesario para referenciar secretos en `gcloud run deploy --update-secrets`.

@@ -18,11 +18,6 @@ variable "app_name" {
   type        = string
 }
 
-variable "artifact_repository_id" {
-  description = "Artifact Registry repository id"
-  type        = string
-}
-
 variable "cloud_sql_instance_name" {
   description = "Cloud SQL instance name"
   type        = string

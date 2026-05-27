@@ -6,25 +6,6 @@ locals {
   }
 }
 
-resource "google_artifact_registry_repository" "app" {
-  location      = var.region
-  repository_id = var.artifact_repository_id
-  description   = "Container images for ${var.app_name} (${var.environment})"
-  format        = "DOCKER"
-
-  # Nota sobre el registro de imágenes:
-  # Los workflows de demo del curso (envia-a-docker.yaml, envia-a-packages.yml)
-  # publican en Docker Hub y GHCR para ilustrar esos registros. El workflow de
-  # despliegue (despliega-cloud-run.yaml) consume la imagen desde GHCR.
-  # Este repositorio de Artifact Registry es la alternativa recomendada para
-  # equipos con stack 100% GCP: ofrece IAM nativo, escaneo de vulnerabilidades
-  # integrado y latencia menor desde Cloud Run al estar en la misma región.
-  # Para migrar: actualizar IMAGE_URL en despliega-cloud-run.yaml a
-  # "${var.region}-docker.pkg.dev/${var.project_id}/${var.artifact_repository_id}/<image>"
-  # y añadir un paso de login a Artifact Registry en envia-a-packages.yml.
-
-  labels = local.labels
-}
 
 resource "google_sql_database_instance" "app" {
   name             = var.cloud_sql_instance_name
