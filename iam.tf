@@ -102,6 +102,23 @@ resource "google_service_account_iam_member" "cicd_act_as_runtime" {
   member             = "serviceAccount:${google_service_account.cicd_deployer.email}"
 }
 
+# Permite al SA de CI/CD generar identity tokens impersonándose a sí mismo.
+# Necesario para el smoke test: gcloud auth print-identity-token no funciona
+# con credenciales WIF sin impersonación explícita.
+resource "google_service_account_iam_member" "cicd_self_token_creator" {
+  service_account_id = google_service_account.cicd_deployer.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${google_service_account.cicd_deployer.email}"
+}
+
+# Permite al SA de CI/CD invocar el servicio Cloud Run para el smoke test.
+resource "google_cloud_run_v2_service_iam_member" "cicd_invoker" {
+  name     = google_cloud_run_v2_service.app.name
+  location = var.region
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.cicd_deployer.email}"
+}
+
 # El SA de runtime necesita leer DATABASE_URL de Secret Manager en tiempo de ejecución.
 # El permiso se otorga solo sobre este secreto (no a nivel de proyecto) para mínimo privilegio.
 resource "google_secret_manager_secret_iam_member" "runtime_database_url" {
