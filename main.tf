@@ -22,9 +22,8 @@ resource "google_sql_database_instance" "app" {
     }
 
     ip_configuration {
-      ipv4_enabled        = true
-      authorized_networks = []
-      # Para producción: ipv4_enabled = false + private_network (self_link de la VPC).
+      ipv4_enabled = true
+      # Sin bloques authorized_networks: ninguna red puede conectarse por TCP directo.
       # Toda conexión debe pasar por Cloud SQL Auth Proxy; nunca TCP directo.
     }
   }
@@ -53,15 +52,24 @@ resource "google_secret_manager_secret" "database_url" {
   labels = local.labels
 }
 
-# NOTA: Terraform crea el contenedor del secreto pero NO su valor (versión).
-# Tras el primer apply, añadir la versión manualmente:
+# Versión placeholder necesaria para que Cloud Run pueda resolver latest en el primer apply.
+# ignore_changes evita que Terraform sobreescriba el valor real una vez actualizado con:
 #   gcloud secrets versions add DATABASE_URL --data-file=<(echo -n "postgresql://<user>:<pass>@/<db>?host=/cloudsql/<connection_name>")
-# Esto evita que la contraseña de base de datos aparezca en el estado de Terraform
-# o en la consola de Cloud Run; solo el SA de runtime puede leerla en tiempo de ejecución.
+resource "google_secret_manager_secret_version" "database_url_placeholder" {
+  secret      = google_secret_manager_secret.database_url.id
+  secret_data = "placeholder"
+
+  lifecycle {
+    ignore_changes = [secret_data]
+  }
+}
 
 resource "google_cloud_run_v2_service" "app" {
-  name     = var.cloud_run_service_name
-  location = var.region
+  name                = var.cloud_run_service_name
+  location            = var.region
+  deletion_protection = var.enable_deletion_protection
+
+  depends_on = [google_secret_manager_secret_version.database_url_placeholder]
 
   # Cloud Run no tiene deletion_protection nativo; la protección se gestiona
   # con IAM (revocar roles/run.admin al SA de CI/CD en prod si fuera necesario).

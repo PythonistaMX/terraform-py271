@@ -48,7 +48,7 @@ variable "db_password" {
 variable "enable_deletion_protection" {
   description = "Enable deletion protection for critical resources"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "github_repository" {
