@@ -4,6 +4,23 @@ Stack de infraestructura GCP para la aplicación `api-github-actions-demo`,
 gestionado con Terraform y desplegado desde GitHub Actions con autenticación
 OIDC (sin llaves estáticas de service account).
 
+## Cómo usar este repositorio
+
+**Como referencia de IAM y seguridad GCP** — lee `SECURITY.md` e `iam.tf`
+para ver un modelo real de Workload Identity Federation, separación de
+service accounts y mínimo privilegio con sus trade-offs documentados.
+Sin necesidad de aplicar nada.
+
+**Como punto de partida para infraestructura GCP con Terraform** — clona
+el repo, ajusta `terraform.tfvars` con tu proyecto y región, y aplica.
+Obtienes Cloud Run + Cloud SQL + Artifact Registry + WIF/OIDC listos para
+conectar con tu propio pipeline de CI/CD.
+
+**Como submódulo de otro proyecto** — inclúyelo con
+`git submodule add <url>` para separar la gestión de infraestructura del
+código de la aplicación, manteniendo cada repositorio con su propio ciclo
+de vida y permisos.
+
 ## Recursos provisionados
 
 | Archivo | Recurso | Descripción |
