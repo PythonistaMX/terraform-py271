@@ -119,6 +119,14 @@ resource "google_cloud_run_v2_service_iam_member" "cicd_invoker" {
   member   = "serviceAccount:${google_service_account.cicd_deployer.email}"
 }
 
+# Acceso público: cualquier usuario puede invocar el servicio sin autenticación.
+resource "google_cloud_run_v2_service_iam_member" "public_invoker" {
+  name     = google_cloud_run_v2_service.app.name
+  location = var.region
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
 # El SA de runtime necesita leer DATABASE_URL de Secret Manager en tiempo de ejecución.
 # El permiso se otorga solo sobre este secreto (no a nivel de proyecto) para mínimo privilegio.
 resource "google_secret_manager_secret_iam_member" "runtime_database_url" {

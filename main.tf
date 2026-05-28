@@ -111,6 +111,11 @@ resource "google_cloud_run_v2_service" "app" {
           }
         }
       }
+
+      volume_mounts {
+        name       = "cloudsql"
+        mount_path = "/cloudsql"
+      }
     }
 
     volumes {
@@ -124,9 +129,13 @@ resource "google_cloud_run_v2_service" "app" {
   }
 
   lifecycle {
-    # La imagen la controla el pipeline de CI/CD (gcloud run deploy).
+    # La imagen y los secrets los controla el pipeline de CI/CD (gcloud run deploy).
     # Terraform gestiona configuración, SA, Cloud SQL y variables de entorno.
-    ignore_changes = [template[0].containers[0].image]
+    ignore_changes = [
+      template[0].containers[0].image,
+      template[0].containers[0].env,
+      template[0].containers[0].volume_mounts,
+    ]
   }
 
   labels = local.labels
