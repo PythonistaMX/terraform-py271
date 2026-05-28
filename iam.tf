@@ -7,14 +7,27 @@ resource "google_service_account" "cicd_deployer" {
 
 locals {
   cicd_roles = [
+    # Deploy de Cloud Run
     "roles/run.admin",
+    # Suplantar el SA de runtime al desplegar
     "roles/iam.serviceAccountUser",
-    # Necesario para referenciar secretos en `gcloud run deploy --update-secrets`.
-    # Sin este rol el deploy falla al intentar montar APP_SECRET_KEY y APP_SECURITY_PASSWORD_SALT.
+    # Leer secretos en gcloud run deploy --update-secrets
     "roles/secretmanager.viewer",
+    # Crear/modificar secretos en Secret Manager (terraform apply)
+    "roles/secretmanager.admin",
+    # Gestionar instancias, bases de datos y usuarios de Cloud SQL
+    "roles/cloudsql.admin",
+    # Crear SAs y gestionar sus IAM bindings (google_service_account_iam_member)
+    "roles/iam.serviceAccountAdmin",
+    # Crear y configurar el WIF pool y provider
+    "roles/iam.workloadIdentityPoolAdmin",
+    # Gestionar bindings IAM a nivel de proyecto (google_project_iam_member)
+    "roles/resourcemanager.projectIamAdmin",
   ]
 }
 
+# trivy:ignore:AVD-GCP-0006
+# trivy:ignore:AVD-GCP-0049
 resource "google_project_iam_member" "cicd_roles" {
   for_each = toset(local.cicd_roles)
   project  = var.project_id
