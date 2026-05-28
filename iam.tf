@@ -23,10 +23,13 @@ locals {
     "roles/iam.workloadIdentityPoolAdmin",
     # Gestionar bindings IAM a nivel de proyecto (google_project_iam_member)
     "roles/resourcemanager.projectIamAdmin",
-    # Admin de Artifact Registry a nivel de proyecto: incluye getIamPolicy y setIamPolicy
-    # sobre repositorios, necesarios para que Terraform refresque el estado de
-    # google_artifact_registry_repository_iam_member. repoAdmin (nivel repo) no incluye
-    # estos permisos — solo el rol de proyecto los otorga.
+    # roles/artifactregistry.admin a nivel proyecto — trade-off documentado:
+    # Terraform llama a getIamPolicy en cada plan para leer el estado de
+    # google_artifact_registry_repository_iam_member. Ese permiso no existe
+    # en writer ni en repoAdmin (nivel repo); solo en admin (nivel proyecto).
+    # En prod real se separaría en dos SAs: terraform-runner (permisos amplios)
+    # y cicd-deployer (solo push + deploy). Ver NB17 — "Tensión entre mínimo
+    # privilegio y permisos del runner de Terraform".
     "roles/artifactregistry.admin",
   ]
 }
