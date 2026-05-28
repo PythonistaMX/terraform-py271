@@ -28,8 +28,8 @@ locals {
     # google_artifact_registry_repository_iam_member. Ese permiso no existe
     # en writer ni en repoAdmin (nivel repo); solo en admin (nivel proyecto).
     # En prod real se separaría en dos SAs: terraform-runner (permisos amplios)
-    # y cicd-deployer (solo push + deploy). Ver NB17 — "Tensión entre mínimo
-    # privilegio y permisos del runner de Terraform".
+    # y cicd-deployer (solo push + deploy) — patrón visto previamente en la
+    # sección sobre tensión entre mínimo privilegio y permisos del runner de Terraform.
     "roles/artifactregistry.admin",
   ]
 }
