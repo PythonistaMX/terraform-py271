@@ -43,8 +43,9 @@ resource "google_iam_workload_identity_pool_provider" "github" {
     "attribute.environment" = "assertion.environment"
   }
 
-  # Solo este repositorio puede solicitar tokens contra este pool.
-  attribute_condition = "attribute.repository == '${var.github_repository}'"
+  # Solo estos dos repositorios pueden solicitar tokens contra este pool:
+  # el repo de la app (deploys) y el repo de infra (terraform apply).
+  attribute_condition = "attribute.repository in ['${var.github_repository}', '${var.github_infra_repository}']"
 }
 
 # Solo jobs del entorno correcto pueden suplantar al service account.

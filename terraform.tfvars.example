@@ -9,6 +9,7 @@ db_username                 = "app_user"
 enable_deletion_protection  = true
 github_repository           = "PythonistaMX/api-github-actions-demo"
 cloud_run_service_name      = "apiflask-demo"
+github_infra_repository     = "org/py271"
 
 # La contraseña de base de datos se pasa como variable de entorno para no
 # escribirla en disco. Nunca incluir en terraform.tfvars ni en control de versiones.

@@ -52,7 +52,12 @@ variable "enable_deletion_protection" {
 }
 
 variable "github_repository" {
-  description = "Repositorio de GitHub autorizado para OIDC (formato: org/repo)"
+  description = "Repositorio de la app autorizado para OIDC (formato: org/repo)"
+  type        = string
+}
+
+variable "github_infra_repository" {
+  description = "Repositorio de infra autorizado para OIDC (formato: org/repo)"
   type        = string
 }
 
