@@ -129,10 +129,22 @@ resource "google_cloud_run_v2_service_iam_member" "public_invoker" {
   member   = "allUsers"
 }
 
-# El SA de runtime necesita leer DATABASE_URL de Secret Manager en tiempo de ejecución.
-# El permiso se otorga solo sobre este secreto (no a nivel de proyecto) para mínimo privilegio.
+# El SA de runtime necesita leer los tres secretos en tiempo de ejecución.
+# Los permisos se otorgan por secreto (no a nivel de proyecto) para mínimo privilegio.
 resource "google_secret_manager_secret_iam_member" "runtime_database_url" {
   secret_id = google_secret_manager_secret.database_url.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run_runtime.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "runtime_app_secret_key" {
+  secret_id = "APP_SECRET_KEY"
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run_runtime.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "runtime_app_password_salt" {
+  secret_id = "APP_SECURITY_PASSWORD_SALT"
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.cloud_run_runtime.email}"
 }

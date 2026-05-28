@@ -115,6 +115,26 @@ resource "google_cloud_run_v2_service" "app" {
         }
       }
 
+      env {
+        name = "APP_SECRET_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = "APP_SECRET_KEY"
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "APP_SECURITY_PASSWORD_SALT"
+        value_source {
+          secret_key_ref {
+            secret  = "APP_SECURITY_PASSWORD_SALT"
+            version = "latest"
+          }
+        }
+      }
+
       volume_mounts {
         name       = "cloudsql"
         mount_path = "/cloudsql"
@@ -136,7 +156,6 @@ resource "google_cloud_run_v2_service" "app" {
     # Terraform gestiona configuración, SA, Cloud SQL y variables de entorno.
     ignore_changes = [
       template[0].containers[0].image,
-      template[0].containers[0].env,
       template[0].containers[0].volume_mounts,
     ]
   }
