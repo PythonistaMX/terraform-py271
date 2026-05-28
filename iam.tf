@@ -66,8 +66,9 @@ resource "google_iam_workload_identity_pool_provider" "github" {
     "attribute.environment" = "assertion.environment"
   }
 
-  # Solo estos dos repositorios pueden solicitar tokens contra este pool:
-  # el repo de la app (deploys) y el repo de infra (terraform apply).
+  # Restringe el pool a estos dos repositorios exactos. Sin esta condición,
+  # cualquier repositorio de GitHub podría solicitar un token de corta duración
+  # contra este pool y potencialmente suplantar al SA de CI/CD.
   attribute_condition = "attribute.repository in ['${var.github_repository}', '${var.github_infra_repository}']"
 }
 
@@ -119,7 +120,8 @@ resource "google_cloud_run_v2_service_iam_member" "cicd_invoker" {
   member   = "serviceAccount:${google_service_account.cicd_deployer.email}"
 }
 
-# Acceso público: cualquier usuario puede invocar el servicio sin autenticación.
+# Acceso público intencional: la API es de consulta abierta (demo).
+# Para un servicio privado: eliminar este recurso y autenticar con identity tokens.
 resource "google_cloud_run_v2_service_iam_member" "public_invoker" {
   name     = google_cloud_run_v2_service.app.name
   location = var.region

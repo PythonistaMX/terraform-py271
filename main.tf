@@ -29,11 +29,14 @@ resource "google_sql_database_instance" "app" {
     }
 
     ip_configuration {
+      # AVD-GCP-0017 alerta sobre ipv4_enabled=true asumiendo que expone Cloud SQL
+      # directamente en internet. Aquí es falso positivo: authorized_networks está
+      # vacío, así que ninguna IP puede conectarse por TCP directo. Toda conexión
+      # pasa por el Cloud SQL Auth Proxy (socket Unix en /cloudsql). La IPv4 pública
+      # es requerida por el proxy para enrutar la conexión internamente.
       #trivy:ignore:AVD-GCP-0017
       ipv4_enabled = true
       ssl_mode     = "ENCRYPTED_ONLY"
-      # Sin bloques authorized_networks: ninguna red puede conectarse por TCP directo.
-      # Toda conexión debe pasar por Cloud SQL Auth Proxy; nunca TCP directo.
     }
   }
 }
