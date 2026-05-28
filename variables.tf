@@ -61,6 +61,12 @@ variable "github_infra_repository" {
   type        = string
 }
 
+variable "artifact_registry_repository_id" {
+  description = "ID del repositorio en Artifact Registry (formato: letras, dígitos y guiones)"
+  type        = string
+  default     = "app-images"
+}
+
 variable "tf_state_bucket" {
   description = "Nombre del bucket de GCS que almacena el estado de Terraform"
   type        = string

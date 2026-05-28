@@ -7,6 +7,13 @@ locals {
 }
 
 
+resource "google_artifact_registry_repository" "app" {
+  repository_id = var.artifact_registry_repository_id
+  location      = var.region
+  format        = "DOCKER"
+  labels        = local.labels
+}
+
 resource "google_sql_database_instance" "app" {
   name             = var.cloud_sql_instance_name
   database_version = "POSTGRES_15"

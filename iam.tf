@@ -109,3 +109,19 @@ resource "google_secret_manager_secret_iam_member" "runtime_database_url" {
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.cloud_run_runtime.email}"
 }
+
+# El SA de CI/CD necesita hacer push de imágenes al repositorio de Artifact Registry.
+resource "google_artifact_registry_repository_iam_member" "cicd_push" {
+  repository = google_artifact_registry_repository.app.name
+  location   = var.region
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:${google_service_account.cicd_deployer.email}"
+}
+
+# El SA de runtime necesita hacer pull de imágenes desde Artifact Registry.
+resource "google_artifact_registry_repository_iam_member" "runtime_pull" {
+  repository = google_artifact_registry_repository.app.name
+  location   = var.region
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:${google_service_account.cloud_run_runtime.email}"
+}

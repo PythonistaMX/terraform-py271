@@ -28,6 +28,11 @@ output "cloud_run_service_url" {
   value       = google_cloud_run_v2_service.app.uri
 }
 
+output "artifact_registry_url" {
+  description = "URL base del repositorio — valor de GCP_ARTIFACT_REGISTRY en GitHub Actions (formato: REGION-docker.pkg.dev/PROJECT/REPO)"
+  value       = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}"
+}
+
 output "database_url_secret_name" {
   description = "Nombre del secreto de DATABASE_URL en Secret Manager — poblar con: gcloud secrets versions add DATABASE_URL --data-file=<(echo -n 'postgresql://...')"
   value       = google_secret_manager_secret.database_url.secret_id
