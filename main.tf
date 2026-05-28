@@ -69,7 +69,7 @@ resource "google_secret_manager_secret_version" "database_url_placeholder" {
 resource "google_cloud_run_v2_service" "app" {
   name                = var.cloud_run_service_name
   location            = var.region
-  deletion_protection = var.enable_deletion_protection
+  deletion_protection = false
 
   depends_on = [google_secret_manager_secret_version.database_url_placeholder]
 
