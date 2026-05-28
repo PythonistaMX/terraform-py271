@@ -39,7 +39,9 @@ resource "google_project_iam_member" "cicd_roles" {
 # Otorgado al nivel de bucket (no de proyecto) para mínimo privilegio.
 resource "google_storage_bucket_iam_member" "cicd_state" {
   bucket = var.tf_state_bucket
-  role   = "roles/storage.objectAdmin"
+  # storage.admin a nivel de bucket (no de proyecto): incluye getIamPolicy,
+  # necesario para que Terraform refresque este recurso en cada plan.
+  role   = "roles/storage.admin"
   member = "serviceAccount:${google_service_account.cicd_deployer.email}"
 }
 
