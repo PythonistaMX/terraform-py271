@@ -137,11 +137,13 @@ resource "google_secret_manager_secret_iam_member" "runtime_database_url" {
   member    = "serviceAccount:${google_service_account.cloud_run_runtime.email}"
 }
 
-# El SA de CI/CD necesita hacer push de imágenes al repositorio de Artifact Registry.
+# El SA de CI/CD necesita push de imágenes y leer/modificar la política IAM del repositorio.
+# repoAdmin en lugar de writer: Terraform requiere getIamPolicy al refrescar el estado
+# de google_artifact_registry_repository_iam_member; writer no incluye ese permiso.
 resource "google_artifact_registry_repository_iam_member" "cicd_push" {
   repository = google_artifact_registry_repository.app.name
   location   = var.region
-  role       = "roles/artifactregistry.writer"
+  role       = "roles/artifactregistry.repoAdmin"
   member     = "serviceAccount:${google_service_account.cicd_deployer.email}"
 }
 
