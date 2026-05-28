@@ -61,6 +61,11 @@ variable "github_infra_repository" {
   type        = string
 }
 
+variable "tf_state_bucket" {
+  description = "Nombre del bucket de GCS que almacena el estado de Terraform"
+  type        = string
+}
+
 variable "cloud_run_service_name" {
   description = "Nombre del servicio Cloud Run — valor de GCP_CLOUD_RUN_SERVICE en GitHub Actions"
   type        = string

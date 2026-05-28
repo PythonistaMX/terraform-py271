@@ -22,7 +22,8 @@ resource "google_sql_database_instance" "app" {
     }
 
     ip_configuration {
-      ipv4_enabled = true
+      ipv4_enabled = true  #trivy:ignore:AVD-GCP-0017
+      ssl_mode     = "ENCRYPTED_ONLY"
       # Sin bloques authorized_networks: ninguna red puede conectarse por TCP directo.
       # Toda conexión debe pasar por Cloud SQL Auth Proxy; nunca TCP directo.
     }

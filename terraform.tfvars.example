@@ -8,6 +8,7 @@ cloud_sql_tier              = "db-f1-micro"
 db_username                 = "app_user"
 enable_deletion_protection  = true
 github_repository           = "PythonistaMX/api-github-actions-demo"
+tf_state_bucket             = "tf-state-<PROJECT_ID>"
 cloud_run_service_name      = "apiflask-demo"
 github_infra_repository     = "org/terraform-py271"
 

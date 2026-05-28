@@ -48,6 +48,7 @@ jobs:
       # github_infra_repository: este mismo repo de infra (contexto automático de GitHub).
       TF_VAR_github_repository: ${{ vars.APP_GITHUB_REPOSITORY }}
       TF_VAR_github_infra_repository: ${{ github.repository }}
+      TF_VAR_tf_state_bucket: ${{ vars.TF_STATE_BUCKET }}
       # Requerido por main.tf para el recurso google_cloud_run_v2_service.
       TF_VAR_cloud_run_service_name: ${{ vars.GCP_CLOUD_RUN_SERVICE }}
 

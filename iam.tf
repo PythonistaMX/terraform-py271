@@ -22,6 +22,14 @@ resource "google_project_iam_member" "cicd_roles" {
   member   = "serviceAccount:${google_service_account.cicd_deployer.email}"
 }
 
+# Permiso de lectura/escritura al bucket del estado de Terraform.
+# Otorgado al nivel de bucket (no de proyecto) para mínimo privilegio.
+resource "google_storage_bucket_iam_member" "cicd_state" {
+  bucket = var.tf_state_bucket
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.cicd_deployer.email}"
+}
+
 # Pool de identidades: perímetro de confianza para sistemas CI externos.
 resource "google_iam_workload_identity_pool" "github" {
   workload_identity_pool_id = "github-pool"
